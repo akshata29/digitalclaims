@@ -1,4 +1,5 @@
-Connect-AzAccount
+$azAccount = Connect-AzAccount
+
 $context = Get-AzSubscription -SubscriptionId a96b8f1a-f683-4f26-918c-f083e93873fc
 Set-AzContext @context
 Install-Module Az.Search
@@ -509,3 +510,9 @@ Steps : Day 2
 		* Execute the E2E workflow using HTML/Webchat
 	* Show the Static Web API to display the output of the Azure search
 
+az group create --name digitalclaims --location "West US"
+az deployment group create \
+  --name digitalclaims \
+  --resource-group digitalclaims \
+  --template-file main.bicep \
+  --parameters prefix=aiclaims 

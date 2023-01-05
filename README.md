@@ -1,5 +1,3 @@
-![MSUS Solution Accelerator](./images/MSUS%20Solution%20Accelerator%20Banner%20Two_981.png)
-
 # AI-Powered Insurance Claims Automation Accelerator
 
 The accelerator will showcase Azure platform’s machine learning capability to recognize document type, extract required fields and push data to downstream applications, significantly reducing manual efforts and creating smoother customer experience.
@@ -33,8 +31,6 @@ These are the key pre-requisites to deploy this accelerator:
 
 2. **PowerShell**: The one-command deployment process uses PowerShell to execute all the required activities to get the accelerator up and running. If you don't have PowerShell, install it from [here](https://docs.microsoft.com/en-us/powershell/scripting/install/installing-windows-powershell?view=powershell-6). Direct link to [MSI download](https://github.com/PowerShell/PowerShell/releases/download/v6.2.3/PowerShell-6.2.3-win-x64.msi). If you have an older version of Power Shell you will have to update to the latest version.
 
-3. **Request access to Form recognizer**.  [Form Recognizer](https://learn.microsoft.com/en-us/azure/applied-ai-services/form-recognizer/overview?view=form-recog-3.0.0) is available in a limited-access preview. Please contact Microsoft to get access to the preview and submit the Form Recognizer. Once you have access, you can [create](https://portal.azure.com/?microsoft_azure_marketplace_ItemHideKey=microsoft_azure_cognitiveservices_formUnderstandingPreview#create/Microsoft.CognitiveServicesFormRecognizer) the form recognizer service.
-
 ## List of Artifacts Deployed
 
 * API Connection
@@ -58,7 +54,7 @@ These are the key pre-requisites to deploy this accelerator:
   * Storage for Forms
   * Storage for Training
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FMSUSSolutionAccelerators%2FAI-Powered-Insurance-Claims-Automation-Solution-Accelerator%2Fmain%2Ftemplate.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%akshata29%2Fdigitalclaims%2Fmain%2Ftemplate.json)
 
 ## License
 Copyright (c) Microsoft Corporation
