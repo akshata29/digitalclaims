@@ -1,8 +1,5 @@
-@description('Name of the blob as it is stored in the blob container')
-param filename string = 'blob.txt'
-
 @description('UTC timestamp used to create distinct deployment scripts for each deployment')
-param utcValue string = utcNow()
+param utcValue string = newGuid()
 
 @description('Name of the blob container')
 param containerName string = 'data'
@@ -12,6 +9,9 @@ param location string = resourceGroup().location
 
 @description('Desired name of the storage account')
 param storageAccountName string 
+
+@description('Local folder name')
+param folderName string 
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' existing = {
   name: storageAccountName
@@ -35,6 +35,6 @@ resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
         secureValue: storageAccount.listKeys().keys[0].value
       }
     ]
-    scriptContent: 'az storage blob upload -f ${filename} -c ${containerName} -n ${filename}'
+    scriptContent: 'az storage blob upload-batch -d ${containerName} --account-name ${storageAccountName} --source ${folderName} --account-key ${listKeys(storageAccount.id, storageAccount.apiVersion).keys[0].value}'
   }
 }

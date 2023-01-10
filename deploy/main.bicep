@@ -19,19 +19,24 @@ var name = toLower('${prefix}')
 // Create a short, unique suffix, that will be unique to each resource group
 //var uniqueSuffix = substring(uniqueString(resourceGroup().id), 0, 4)
 
-module rG 'modules/resourcegroup.bicep' = {
-  //name: 'rg${name}-${uniqueSuffix}-deployment'
-  name: 'rg${name}-deployment'
-  params: {
-    location: location
-    resourceGroupName: '${name}rg'
-    tags: tags
-  }
+// module rG 'modules/resourcegroup.bicep' = {
+//   //name: 'rg${name}-${uniqueSuffix}-deployment'
+//   name: 'rg${name}-deployment'
+//   params: {
+//     location: location
+//     resourceGroupName: '${name}'
+//     tags: tags
+//   }
+// }
+
+resource rG 'Microsoft.Resources/resourceGroups@2021-01-01' = {
+  name: name
+  location: location
 }
 
 module keyvault 'modules/keyvault.bicep' = {
   name: 'kv${name}-deployment'
-  scope: resourceGroup('${name}rg')
+  scope: rG
   params: {
     location: location
     keyvaultName: '${name}kv'
@@ -41,7 +46,8 @@ module keyvault 'modules/keyvault.bicep' = {
 
 module storage 'modules/storage.bicep' = {
   name: 'st${name}-deployment'
-  scope: resourceGroup('${name}rg')
+  //scope: resourceGroup('${name}')
+  scope: rG
   params: {
     location: location
     storageName: '${name}stor'
@@ -52,7 +58,8 @@ module storage 'modules/storage.bicep' = {
 
 module formrecognizer 'modules/formrecognizer.bicep' = {
   name: 'fr${name}-deployment'
-  scope: resourceGroup('${name}rg')
+  //scope: resourceGroup('${name}')
+  scope: rG
   params: {
     location: location
     cognitiveServiceName: '${name}frcogsvc'
@@ -63,7 +70,8 @@ module formrecognizer 'modules/formrecognizer.bicep' = {
 
 module cognitiveservice 'modules/cognitiveservice.bicep' = {
   name: 'cg${name}-deployment'
-  scope: resourceGroup('${name}rg')
+  //scope: resourceGroup('${name}')
+  scope: rG
   params: {
     location: location
     cognitiveServiceName: '${name}cogsvc'
@@ -74,7 +82,7 @@ module cognitiveservice 'modules/cognitiveservice.bicep' = {
 
 module customvision 'modules/customvision.bicep' = {
   name: 'cv${name}-deployment'
-  scope: resourceGroup('${name}rg')
+  scope: resourceGroup('${name}')
   params: {
     location: location
     customvisonPredictionName: '${name}cpcogsvc'
@@ -86,7 +94,8 @@ module customvision 'modules/customvision.bicep' = {
 
 module language 'modules/language.bicep' = {
   name: 'lg${name}-deployment'
-  scope: resourceGroup('${name}rg')
+  //scope: resourceGroup('${name}')
+  scope: rG
   params: {
     location: location
     languageServiceName: '${name}tacogsvc'
@@ -97,7 +106,8 @@ module language 'modules/language.bicep' = {
 
 module appserviceplan 'modules/appserviceplan.bicep' = {
   name: 'asp${name}-deployment'
-  scope: resourceGroup('${name}rg')
+  //scope: resourceGroup('${name}')
+  scope: rG
   params: {
     location: location
     appServicePlanName: '${name}asp'
@@ -107,7 +117,8 @@ module appserviceplan 'modules/appserviceplan.bicep' = {
 
 module search 'modules/cognitivesearch.bicep' = {
   name: 'az${name}-deployment'
-  scope: resourceGroup('${name}rg')
+  //scope: resourceGroup('${name}')
+  scope: rG
   params: {
     location: location
     name: '${name}acs'
@@ -117,7 +128,8 @@ module search 'modules/cognitivesearch.bicep' = {
 
 module cosmosdb 'modules/cosmosdb.bicep' = {
   name: 'cdb${name}-deployment'
-  scope: resourceGroup('${name}rg')
+  //scope: resourceGroup('${name}')
+  scope: rG
   params: {
     location: location
     accountName: '${name}cdb'
@@ -136,7 +148,8 @@ module cosmosdb 'modules/cosmosdb.bicep' = {
 
 module applicationInsights 'modules/applicationinsights.bicep' = {
   name: 'appi-${name}-deployment'
-  scope: resourceGroup('${name}rg')
+  //scope: resourceGroup('${name}')
+  scope: rG
   params: {
     location: location
     applicationInsightsName: '${name}appi'
@@ -144,26 +157,100 @@ module applicationInsights 'modules/applicationinsights.bicep' = {
   }
 }
 
-module blob 'modules/blobupload.bicep' = {
-  name: 'blob-${name}-deployment'
-  scope: resourceGroup('${name}rg')
+module trainblob 'modules/blobupload.bicep' = {
+  name: 'blobtrain-${name}-deployment'
+  //scope: resourceGroup('${name}')
+  scope: rG
   params: {
     location: location
-    storageAccountName:storage.outputs.storageAccountName
+    storageAccountName:'${name}stor'
     containerName:'train'
-    filename:'temp.jpg'
+    folderName:'Train'
   }
 }
 
-// Get a reference to the existing storage
-resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' existing = {
-  scope: resourceGroup('${name}rg')
-  name: storage.outputs.storageAccountName
+module testblob 'modules/blobupload.bicep' = {
+  name: 'blobtest-${name}-deployment'
+  //scope: resourceGroup('${name}')
+  scope: rG
+  params: {
+    location: location
+    storageAccountName:'${name}stor'
+    containerName:'test'
+    folderName:'Test'
+  }
 }
 
-resource formRecognizer 'Microsoft.CognitiveServices/accounts@2021-10-01' existing = {
-  name: formrecognizer.outputs.formRecognizerName
+module blobconnection 'modules/storagewebconnection.bicep' = {
+  name: 'storweb-${name}-deployment'
+  scope: rG
+  params: {
+    location: location
+    storageAccountName:'${name}stor'
+    name:'${name}blob'
+    tags:tags
+  }
 }
+
+module cvconnection 'modules/customvisionwebconnection.bicep' = {
+  name: 'cvconn-${name}-deployment'
+  scope: rG
+  params: {
+    location: location
+    customVisionName:'${name}cpcogsvc'
+    name:'${name}cvpred'
+    tags:tags
+  }
+}
+
+module frconnection 'modules/formrecwebconnection.bicep' = {
+  name: 'frconn-${name}-deployment'
+  scope: rG
+  params: {
+    location: location
+    formRecognizerName:'${name}frcogsvc'
+    name:'${name}fr'
+    tags:tags
+  }
+}
+
+
+module cdbconnection 'modules/cosmosdbwebconnection.bicep' = {
+  name: 'cdbconn-${name}-deployment'
+  scope: rG
+  params: {
+    location: location
+    cosmodbAccountName:'${name}cdb'
+    cosmosdbDatabaseName:'fsihack'
+    name:'${name}cdb'
+    tags:tags
+  }
+}
+
+module logicapp 'modules/logicapp.bicep' = {
+  name: 'lappconn-${name}-deployment'
+  scope: rG
+  params: {
+    location: location
+    blobConnName:'${name}blob'
+    cdbConnName:'${name}cdb'
+    cgcvConnName:'${name}cvpred'
+    frConnName:'${name}fr'
+    logicAppName:'${name}lapp'
+  }
+}
+
+// // Get a reference to the existing storage
+// resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' existing = {
+//   //scope: resourceGroup('${name}')
+//   scope: rG
+//   name: storage.outputs.storageAccountName
+// }
+
+// resource formRecognizer 'Microsoft.CognitiveServices/accounts@2021-10-01' existing = {
+//   scope: resourceGroup('${name}')
+//   name: formrecognizer.outputs.formRecognizerName
+// }
 
 // $storageAccountConnectionString = 'DefaultEndpointsProtocol=https;AccountName=' + $storageAccountName + ';AccountKey=' + $storageAccountKey + ';EndpointSuffix=core.windows.net' 
 // output storageKey string = '${listKeys(storageAccount.id, storageAccount.apiVersion).keys[0].value}'

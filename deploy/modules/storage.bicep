@@ -123,5 +123,14 @@ resource processingcontainer 'Microsoft.Storage/storageAccounts/blobServices/con
 resource uploadcontainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2022-05-01' = {
   name: '${storage.name}/default/${uploadContainer}'
 }
+
+resource traincontainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2022-05-01' = {
+  name: '${storage.name}/default/train'
+}
+
+resource testcontainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2022-05-01' = {
+  name: '${storage.name}/default/test'
+}
+
 output storageAccountName string = storage.name
 output storageAccountId string = storage.id
