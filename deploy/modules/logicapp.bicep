@@ -218,7 +218,7 @@ resource stg 'Microsoft.Logic/workflows@2019-05-01' = {
                                     'type': 'Foreach'
                                 }
                             }
-                            'case': 'Driving License'
+                            'case': 'driving license'
                         }
                         'Insurance': {
                             'actions': {
@@ -774,7 +774,7 @@ resource stg 'Microsoft.Logic/workflows@2019-05-01' = {
                                     'type': 'ParseJson'
                                 }
                             }
-                            'case': 'Insurance'
+                            'case': 'insurance'
                         }
                         'Service_Estimate': {
                             'actions': {
@@ -854,7 +854,7 @@ resource stg 'Microsoft.Logic/workflows@2019-05-01' = {
                                     'type': 'Foreach'
                                 }
                             }
-                            'case': 'Service Estimate'
+                            'case': 'service estimates'
                         }
                     }
                     'default': {

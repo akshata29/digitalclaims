@@ -1,0 +1,15 @@
+{
+  "claimsbot.en-us": {
+    "rootDialog": true,
+    "triggers": {
+      "Cancel": [
+        "CancelDialog.en-us"
+      ],
+      "Help": [
+        "HelpDialog.en-us"
+      ],
+      "ExistingClaim": "",
+      "NewClaim": ""
+    }
+  }
+}

@@ -101,7 +101,7 @@ Steps : Day 1
 			* Record ModelId
 			* Test Model using UI
 			* Test Model using PostMan
-		* NOTE : We may not be able to use the FR model created in Form Recognizer studio due to new release.  Once the experience is shown to the user, fallback to fott tool and use the same data and create a model and use that ModelId in Logic app
+ModelId in Logic app
 	* Logic Apps
 		* Walk through the Logic app workflow
 		* Modify Custom Vision ProjectId

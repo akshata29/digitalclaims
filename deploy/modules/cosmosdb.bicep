@@ -110,101 +110,101 @@ resource database 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2022-05-15
   }
 }
 
-resource insurancecontainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2022-05-15' = {
-  name: '${database.name}/${insuranceContainer}'
-  properties: {
-    resource: {
-      id: insuranceContainer
-      partitionKey: {
-        paths: [
-          '/FormType'
-        ]
-        kind: 'Hash'
-      }
-      indexingPolicy: {
-        indexingMode: 'consistent'
-        includedPaths: [
-          {
-            path: '/*'
-          }
-        ]
-        excludedPaths: [
-          {
-            path: '/_etag/?'
-          }
-        ]
-      }
-      defaultTtl: 86400
-    }
-    options: {
-      throughput: throughput
-    }
-  }
-}
+// resource insurancecontainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2022-05-15' = {
+//   name: '${database.name}/${insuranceContainer}'
+//   properties: {
+//     resource: {
+//       id: insuranceContainer
+//       partitionKey: {
+//         paths: [
+//           '/FormType'
+//         ]
+//         kind: 'Hash'
+//       }
+//       indexingPolicy: {
+//         indexingMode: 'consistent'
+//         includedPaths: [
+//           {
+//             path: '/*'
+//           }
+//         ]
+//         excludedPaths: [
+//           {
+//             path: '/_etag/?'
+//           }
+//         ]
+//       }
+//       defaultTtl: 86400
+//     }
+//     options: {
+//       throughput: throughput
+//     }
+//   }
+// }
 
-resource drivingLicensecontainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2022-05-15' = {
-  name: '${database.name}/${drivingLicenseContainer}'
-  properties: {
-    resource: {
-      id: drivingLicenseContainer
-      partitionKey: {
-        paths: [
-          '/FormType'
-        ]
-        kind: 'Hash'
-      }
-      indexingPolicy: {
-        indexingMode: 'consistent'
-        includedPaths: [
-          {
-            path: '/*'
-          }
-        ]
-        excludedPaths: [
-          {
-            path: '/_etag/?'
-          }
-        ]
-      }
-      defaultTtl: 86400
-    }
-    options: {
-      throughput: throughput
-    }
-  }
-}
+// resource drivingLicensecontainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2022-05-15' = {
+//   name: '${database.name}/${drivingLicenseContainer}'
+//   properties: {
+//     resource: {
+//       id: drivingLicenseContainer
+//       partitionKey: {
+//         paths: [
+//           '/FormType'
+//         ]
+//         kind: 'Hash'
+//       }
+//       indexingPolicy: {
+//         indexingMode: 'consistent'
+//         includedPaths: [
+//           {
+//             path: '/*'
+//           }
+//         ]
+//         excludedPaths: [
+//           {
+//             path: '/_etag/?'
+//           }
+//         ]
+//       }
+//       defaultTtl: 86400
+//     }
+//     options: {
+//       throughput: throughput
+//     }
+//   }
+// }
 
-resource serviceEstimatecontainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2022-05-15' = {
-  name: '${database.name}/${serviceEstimateContainer}'
-  properties: {
-    resource: {
-      id: serviceEstimateContainer
-      partitionKey: {
-        paths: [
-          '/FormType'
-        ]
-        kind: 'Hash'
-      }
-      indexingPolicy: {
-        indexingMode: 'consistent'
-        includedPaths: [
-          {
-            path: '/*'
-          }
-        ]
-        excludedPaths: [
-          {
-            path: '/_etag/?'
-          }
-        ]
-      }
-      defaultTtl: 86400
-    }
-    options: {
-      throughput: throughput
-    }
-  }
-}
+// resource serviceEstimatecontainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2022-05-15' = {
+//   name: '${database.name}/${serviceEstimateContainer}'
+//   properties: {
+//     resource: {
+//       id: serviceEstimateContainer
+//       partitionKey: {
+//         paths: [
+//           '/FormType'
+//         ]
+//         kind: 'Hash'
+//       }
+//       indexingPolicy: {
+//         indexingMode: 'consistent'
+//         includedPaths: [
+//           {
+//             path: '/*'
+//           }
+//         ]
+//         excludedPaths: [
+//           {
+//             path: '/_etag/?'
+//           }
+//         ]
+//       }
+//       defaultTtl: 86400
+//     }
+//     options: {
+//       throughput: throughput
+//     }
+//   }
+// }
 
 resource claimscontainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2022-05-15' = {
   name: '${database.name}/${claimsContainer}'
