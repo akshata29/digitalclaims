@@ -173,6 +173,7 @@ module trainblob 'modules/blobupload.bicep' = {
   name: 'blobtrain-${name}-deployment'
   //scope: resourceGroup('${name}')
   scope: rG
+  dependsOn: [storage]
   params: {
     location: location
     storageAccountName:'${name}stor'
@@ -185,6 +186,7 @@ module testblob 'modules/blobupload.bicep' = {
   name: 'blobtest-${name}-deployment'
   //scope: resourceGroup('${name}')
   scope: rG
+  dependsOn: [storage]
   params: {
     location: location
     storageAccountName:'${name}stor'
@@ -196,6 +198,7 @@ module testblob 'modules/blobupload.bicep' = {
 module blobconnection 'modules/storagewebconnection.bicep' = {
   name: 'storweb-${name}-deployment'
   scope: rG
+  dependsOn: [storage]
   params: {
     location: location
     storageAccountName:'${name}stor'
@@ -207,6 +210,7 @@ module blobconnection 'modules/storagewebconnection.bicep' = {
 module cvconnection 'modules/customvisionwebconnection.bicep' = {
   name: 'cvconn-${name}-deployment'
   scope: rG
+  dependsOn: [customvision]
   params: {
     location: location
     customVisionName:'${name}cpcogsvc'
@@ -218,6 +222,7 @@ module cvconnection 'modules/customvisionwebconnection.bicep' = {
 module frconnection 'modules/formrecwebconnection.bicep' = {
   name: 'frconn-${name}-deployment'
   scope: rG
+  dependsOn: [formrecognizer]
   params: {
     location: location
     formRecognizerName:'${name}frcogsvc'
@@ -230,6 +235,7 @@ module frconnection 'modules/formrecwebconnection.bicep' = {
 module cdbconnection 'modules/cosmosdbwebconnection.bicep' = {
   name: 'cdbconn-${name}-deployment'
   scope: rG
+  dependsOn: [cosmosdb]
   params: {
     location: location
     cosmodbAccountName:'${name}cdb'
@@ -242,6 +248,7 @@ module cdbconnection 'modules/cosmosdbwebconnection.bicep' = {
 module logicapp 'modules/logicapp.bicep' = {
   name: 'lappconn-${name}-deployment'
   scope: rG
+  dependsOn: [cdbconnection, frconnection, blobconnection, cvconnection]
   params: {
     location: location
     blobConnName:'${name}blob'

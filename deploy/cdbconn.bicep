@@ -46,6 +46,7 @@ module cosmosdb 'modules/cosmosdb.bicep' = {
 module cdbconnection 'modules/cosmosdbwebconnection.bicep' = {
   name: 'cdbconn-${name}-deployment'
   scope: rG
+  dependsOn: [cosmosdb]
   params: {
     location: location
     cosmodbAccountName:'${name}cdb'
