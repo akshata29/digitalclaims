@@ -23,6 +23,26 @@ resource rG 'Microsoft.Resources/resourceGroups@2021-01-01' = {
 }
 
 
+module cosmosdb 'modules/cosmosdb.bicep' = {
+  name: 'cdb${name}-deployment'
+  //scope: resourceGroup('${name}')
+  scope: rG
+  params: {
+    location: location
+    accountName: '${name}cdb'
+    databaseName: 'fsihack'
+    claimsContainer: 'claims'
+    drivingLicenseContainer: 'drivinglicense'
+    insuranceContainer: 'insurance'
+    serviceEstimateContainer: 'serviceestimate'
+    defaultConsistencyLevel: 'BoundedStaleness'
+    maxIntervalInSeconds: 300
+    maxStalenessPrefix: 100000
+    primaryRegion: 'westus'
+    secondaryRegion: 'eastus'
+  }
+}
+
 module cdbconnection 'modules/cosmosdbwebconnection.bicep' = {
   name: 'cdbconn-${name}-deployment'
   scope: rG

@@ -129,7 +129,7 @@ az login
 az set subscription --name <subscriptionId>
 $prefix = "aiclaims13"
 az group create --name $prefix --location "East US"
-az deployment sub create --location WestUS --parameters '{ "prefix": { "value": "aiclaims13" }, "location": { "value": "eastus" } }' --template-file main.bicep
+az deployment sub create --location eastus --parameters '{ "prefix": { "value": "aiclaims13" }, "location": { "value": "eastus" } }' --template-file main.bicep
 
 -- For now manually running upload of train/test dataset till can fix the bicep deployment
 $storKeys = az storage account keys list -g $prefix -n $prefix"stor" | ConvertFrom-Json
@@ -138,3 +138,5 @@ az storage blob upload-batch -d test --account-name $prefix"stor" --source Test 
 az storage blob upload-batch -d train --account-name $prefix"stor" --source Train --account-key $storKeys[0].value
 -- For now manually update the prediction key & endpoint for customvision, formrecognizer & document db web connection.  web connection are created automatically otherwise
 -- Possibly need to create cosmosdb web connection manually - webconnection ending with cdb
+az deployment sub create --location eastus --parameters '{ "prefix": { "value": "aiclaims13" }, "location": { "value": "eastus" } }' --template-file cdbconn.bicep
+
