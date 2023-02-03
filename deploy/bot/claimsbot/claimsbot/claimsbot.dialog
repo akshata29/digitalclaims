@@ -41,7 +41,8 @@
               ]
             }
           ],
-          "value": "dialog.foreach.value"
+          "value": "dialog.foreach.value",
+          "index": "dialog.foreach.index"
         }
       ]
     },
@@ -176,7 +177,7 @@
           },
           "connectionString": "=settings.cosmosConnString",
           "database": "=settings.cosmosDb",
-          "container": "=settings.cosmosInsContainer",
+          "container": "=settings.claimsContainer",
           "itemId": "=user.claimNumber",
           "resultProperty": "=user.InsuranceDetails",
           "partitionKey": "=user.claimNumber"
@@ -315,7 +316,8 @@
                   "defaultValueResponse": "",
                   "prompt": "${AttachmentInput_Prompt_jEtQk6()}",
                   "property": "dialog.attachments",
-                  "outputFormat": "all"
+                  "outputFormat": "all",
+                  "value": {}
                 },
                 {
                   "$kind": "Microsoft.SetProperties",

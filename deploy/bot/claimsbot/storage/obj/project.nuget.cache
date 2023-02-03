@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "ctlYAWrUf9kCO3LvSIi/YaBozO+rJV297rRYonScO48pOKt8qzJkcIJRbcSd6EfMddv5P5ezC9A9D9/RRajo+Q==",
+  "dgSpecHash": "oZ7c9AbsCZyK5iKAdohAy2EbV+G9VzxliHb/GPyVwdvxbnpZ55AVRYXqCBR5b3XyaW19sO5f4uKUMfWBL64l7Q==",
   "success": true,
   "projectFilePath": "D:\\repos\\digitalclaims\\deploy\\bot\\claimsbot\\storage\\UploadToStorage.csproj",
   "expectedPackageFiles": [

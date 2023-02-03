@@ -127,7 +127,8 @@ az deployment group create  --name digitalclaims  --resource-group digitalclaims
 
 az login
 az set subscription --name <subscriptionId>
-az deployment sub create  --name digitalclaims --template-file main.bicep --parameters prefix=aiclaims location=eastus
+az group create --name digitalclaims --location "West US"
+az deployment sub create --location WestUS --parameters '{ "prefix": { "value": "aiclaims29" }, "location": { "value": "westus" } }' --template-file main.bicep
 
 -- For now manually running upload of train/test dataset till can fix the bicep deployment
 az storage blob upload-batch -d test --account-name "accountname" --source Test --account-key "accountkey"
