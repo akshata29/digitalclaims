@@ -23,9 +23,9 @@ resource cosmosdbconnection 'Microsoft.Web/connections@2016-06-01' = {
   tags: tags
   properties: {
     displayName: name
-    customParameterValuesSet: {
-      predictionKey: cosmosdbaccount.listKeys().primaryMasterKey
-    }
+    // customParameterValuesSet: {
+    //   predictionKey: cosmosdbaccount.listKeys().primaryMasterKey
+    // }
     nonSecretParameterValuesSet: {
       databaseAccount: cosmosdbDatabaseName
       accountId:cosmodbAccountName
