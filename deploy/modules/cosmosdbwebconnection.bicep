@@ -26,10 +26,10 @@ resource cosmosdbconnection 'Microsoft.Web/connections@2016-06-01' = {
     // customParameterValuesSet: {
     //   predictionKey: cosmosdbaccount.listKeys().primaryMasterKey
     // }
-    nonSecretParameterValuesSet: {
-      databaseAccount: cosmosdbDatabaseName
-      accountId:cosmodbAccountName
-    }
+    // nonSecretParameterValuesSet: {
+    //   databaseAccount: cosmosdbDatabaseName
+    //   accountId:cosmodbAccountName
+    // }
     api: {
       name: 'documentdb'
       id: '/subscriptions/${subscription().subscriptionId}/providers/Microsoft.Web/locations/${resourceGroup().location}/managedApis/documentdb'
