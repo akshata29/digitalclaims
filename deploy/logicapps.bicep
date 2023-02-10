@@ -23,15 +23,11 @@ resource rG 'Microsoft.Resources/resourceGroups@2021-01-01' = {
 }
 
 
-module logicapp 'modules/logicapp.bicep' = {
+module logicapp 'modules/logicappempty.bicep' = {
   name: 'lappconn-${name}-deployment'
   scope: rG
   params: {
     location: location
-    blobConnName:'${name}blob'
-    cdbConnName:'${name}cdb'
-    cgcvConnName:'${name}cvpred'
-    frConnName:'${name}fr'
     logicAppName:'${name}lapp'
   }
 }

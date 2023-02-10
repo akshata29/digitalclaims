@@ -1,142 +1,963 @@
-$luisAppImportUrl = $luisAuthoringEndpoint + "luis/api/v2.0/apps/import"
-$outArray.Add("v_luisAppImportUrl=$luisAppImportUrl")
-
-$luisHeader = @{
-	"Ocp-Apim-Subscription-Key" = $luisAuthoringSubscriptionKey
-}
-$luisModels = @{ }
-$luisModels.Clear()
-$trainingLuisFilePath = "$ScriptRoot\luis\"
-
-$files = Get-ChildItem $trainingLuisFilePath
-foreach($file in $files){
-	$fileWithExtension = $trainingLuisFilePath + $file.Name.toLower()
-	$luisApplicationName = (Get-Item $fileWithExtension).Basename
-	$luisApplicationFilePath = $trainingLuisFilePath + $file.Name
-	$luisApplicationTemplate = Get-Content $luisApplicationFilePath
-	$appVersion = '0.1'
-	
-	$luisAppResponse = Invoke-RestMethod -Method Post `
-				-Uri $luisAppImportUrl -ContentType "application/json" `
-				-Headers $luisHeader `
-				-Body $luisApplicationTemplate
-	$luisAppId = $luisAppResponse
-	$luisModels[$luisApplicationName] = $luisAppId
-
-	$luisTrainUrl = $luisAuthoringEndpoint + "luis/authoring/v3.0-preview/apps/" + $luisAppId + "/versions/" + $appVersion + "/train"
-	
-	Write-Host Training Luis Models... -ForegroundColor Green
-	$luisAppTrainResponse = Invoke-RestMethod -Method Post `
-				-Uri $luisTrainUrl `
-				-Headers $luisHeader
-	
-	# Get Training Status
-	# For now wait for 10 seconds
-	Start-Sleep -s 10
-	$luisAppTrainResponse = Invoke-RestMethod -Method Get `
-				-Uri $luisTrainUrl `
-				-Headers $luisHeader
-
-	$publishJsonBody = "{
-		'versionId': '$appVersion',
-		'isStaging': false,
-		'directVersionPublish': false
-	}"
-
-	#Publish the Model
-	Write-Host Publish Luis Models... -ForegroundColor Green
-	$luisPublihUrl = $luisAuthoringEndpoint + "luis/authoring/v3.0-preview/apps/" + $luisAppId + "/publish"
-	$luisAppPublishResponse = Invoke-RestMethod -Method Post `
-				-Uri $luisPublihUrl -ContentType "application/json" `
-				-Headers $luisHeader `
-				-Body $luisApplicationTemplate
-	$luisAppPublishResponse
-}
-
-Default services created 
-	Storage Account
-	Form Recognizer
-	Luis (Authoring & Prediction)
-		TODO : Publishing to Prediction Resource
-	Custom Vision (Training & Prediction)
-	App Service Plan
-	Search Service
-	Cosmos Db
-	Create Cosmos DB & Containers
-	Upload Test/Train data to storage container
-	Train LUIS model
-	Web API Connection 
-		Blob
-		Custom Vision (Might have to do it manually for all deployment) (cognitiveservicescustomvision)
-		Form Recognizer (Might have to do it manually for all deployment) (formrecognizer)
-		Documentdb (accesskey not populating)
-	Logic App
-		There might be a need to change the web api connection for Custom Vision as well as Form Recognizer
-	App Services
-	Azure Bot service
-
-	Key vault
-
-
-Steps : Day 1
-	* Walk through end to end demo
-	* Custom Vision
-		* Create a project in Custom Vision
-		* Upload the images & classify the documents
-		* Train the Model
-		* Publish the Model (Prediction URL) (ModelName should be latest) (https://customvis478734prediction.cognitiveservices.azure.com/customvision/v3.0/Prediction/5b4c6533-835e-4248-8ff9-6393d327694a/classify/iterations/latest/url)
-			* Record the ProjectId & Url
-		* Test the Model in the UI
-		* Show Improving the model concept via Prediction & retrain
-		* Test the model using PostMan
-	* Form Recognizer
-		* Walk through the Form Recognizer Studio
-		* Test the out of the box Models
-			* Driving License
-			* Invoice/Service Estimate
-			* General(for Insurance)
-		* Build Custom Model 
-			* Create Labels & Tag
-			* Train Model
-			* Record ModelId
-			* Test Model using UI
-			* Test Model using PostMan
-ModelId in Logic app
-	* Logic Apps
-		* Walk through the Logic app workflow
-		* Modify Custom Vision ProjectId
-		* Modify the custom model Id
-		* Test the workflow (by uploading the document in Blob storage account)
-			* For each document Type
-		* Show the Debug history and execution of the workflow
-		* Show the documents persisted in CosmosDb
-
-Steps : Day 2
-	* Cognitive Search
-		* Concept around Cognitive Search (Data Source, Index, Indexer)
-		* Execute indexer to pull data from CosmosDb	
-	* Bot Framework Composer
-		* Walk through the Composer and the code (including the Bot Service, Channels concepts)
-		* Test the Bot using "Test in webchat"
-		* Test the Bot(if possible) within Bot Framework Composer or Emulator
-		* Execute the E2E workflow using HTML/Webchat
-	* Show the Static Web API to display the output of the Azure search
-
-az group create --name digitalclaims --location "West US"
-az deployment group create  --name digitalclaims  --resource-group digitalclaims --template-file main.bicep --parameters prefix=aiclaims 
-
+-- Ensure you are executing following steps from /deploy folders
 az login
-az set subscription --name <subscriptionId>
-$prefix = "aiclaims13"
+az account set --subscription <subscriptionId>
+$prefix = "astdc"
 az group create --name $prefix --location "East US"
-az deployment sub create --location eastus --parameters '{ "prefix": { "value": "aiclaims13" }, "location": { "value": "eastus" } }' --template-file main.bicep
+az deployment sub create --location eastus --parameters '{ \"prefix\": { \"value\": \"astdc\" }, \"location\": { \"value\": \"eastus\" } }' --template-file main.bicep
 
 -- For now manually running upload of train/test dataset till can fix the bicep deployment
 $storKeys = az storage account keys list -g $prefix -n $prefix"stor" | ConvertFrom-Json
 -- Execute following from deploy folder
 az storage blob upload-batch -d test --account-name $prefix"stor" --source Test --account-key $storKeys[0].value
 az storage blob upload-batch -d train --account-name $prefix"stor" --source Train --account-key $storKeys[0].value
--- For now manually update the prediction key & endpoint for customvision, formrecognizer & document db web connection.  web connection are created automatically otherwise
+-- For now manually update the prediction key & endpoint for customvision, formrecognizer & document db web connection.  
+-- web connection are created automatically otherwise
 -- Possibly need to create cosmosdb web connection manually - webconnection ending with cdb
-az deployment sub create --location eastus --parameters '{ "prefix": { "value": "aiclaims13" }, "location": { "value": "eastus" } }' --template-file cdbconn.bicep
+az deployment sub create --location eastus --parameters '{ \"prefix\": { \"value\": \"astdc\" }, \"location\": { \"value\": \"eastus\" } }' --template-file cdbconn.bicep
+-- Deploy Logic app (automated somehow doesn't work so create manually with serverless consumption - ending with lapp).  It is empty logicapp
+az deployment sub create --location eastus --parameters '{ \"prefix\": { \"value\": \"astdc\" }, \"location\": { \"value\": \"eastus\" } }' --template-file logicapps.bicep
 
+-- Copy/paste logic app content.  Replace the prefix to deployed prefix and replace subscription Id to deployed subscriptionId
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Copy_file_to_processing_folder": {
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azureblob']['connectionId']"
+                        }
+                    },
+                    "method": "post",
+                    "path": "/datasets/default/copyFile",
+                    "queries": {
+                        "destination": "/processing/@{triggerBody()?['Name']}",
+                        "overwrite": true,
+                        "queryParametersSingleEncoded": true,
+                        "source": "@triggerBody()?['Path']"
+                    }
+                },
+                "runAfter": {
+                    "Initialize_variable": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection"
+            },
+            "Create_SAS_URI_by_path": {
+                "inputs": {
+                    "body": {
+                        "Permissions": "Read,Write,List"
+                    },
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azureblob']['connectionId']"
+                        }
+                    },
+                    "method": "post",
+                    "path": "/datasets/default/CreateSharedLinkByPath",
+                    "queries": {
+                        "path": "@body('Copy_file_to_processing_folder')?['Path']"
+                    }
+                },
+                "runAfter": {
+                    "Delete_file_from_original_folder": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection"
+            },
+            "Delete_file_from_original_folder": {
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azureblob']['connectionId']"
+                        }
+                    },
+                    "method": "delete",
+                    "path": "/datasets/default/files/@{encodeURIComponent(encodeURIComponent(triggerBody()?['Id']))}"
+                },
+                "runAfter": {
+                    "Copy_file_to_processing_folder": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection"
+            },
+            "Filter_Probability": {
+                "inputs": {
+                    "from": "@body('Parse_Json_Response')",
+                    "where": "@greater(item()['probability'], 0.55)"
+                },
+                "runAfter": {
+                    "Parse_Json_Response": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Query"
+            },
+            "For_each_tags": {
+                "actions": {
+                    "Copy_file_to_Success_Folder": {
+                        "inputs": {
+                            "headers": {
+                                "ReadFileMetadataFromServer": true
+                            },
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['azureblob']['connectionId']"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/copyFile",
+                            "queries": {
+                                "destination": "/succeeded/@{body('Copy_file_to_processing_folder')?['Name']}",
+                                "overwrite": true,
+                                "queryParametersSingleEncoded": true,
+                                "source": "@body('Copy_file_to_processing_folder')?['Path']"
+                            }
+                        },
+                        "runAfter": {
+                            "Switch": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "ApiConnection"
+                    },
+                    "Delete_Processed_Blob": {
+                        "inputs": {
+                            "headers": {
+                                "SkipDeleteIfFileNotFoundOnServer": false
+                            },
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['azureblob']['connectionId']"
+                                }
+                            },
+                            "method": "delete",
+                            "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files/@{encodeURIComponent(encodeURIComponent(body('Copy_file_to_processing_folder')?['Path']))}"
+                        },
+                        "runAfter": {
+                            "Copy_file_to_Success_Folder": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "ApiConnection"
+                    },
+                    "Switch": {
+                        "cases": {
+                            "Driving_License": {
+                                "actions": {
+                                    "Analyze_Driving_License": {
+                                        "inputs": {
+                                            "headers": {
+                                                "inputFileUrl": "@body('Create_SAS_URI_by_path')?['WebUrl']"
+                                            },
+                                            "host": {
+                                                "connection": {
+                                                    "name": "@parameters('$connections')['formrecognizer']['connectionId']"
+                                                }
+                                            },
+                                            "method": "post",
+                                            "path": "/v2.1/prebuilt/idDocument/analyze",
+                                            "queries": {
+                                                "includeTextDetails": true
+                                            }
+                                        },
+                                        "runAfter": {},
+                                        "type": "ApiConnection"
+                                    },
+                                    "For_each_Id": {
+                                        "actions": {
+                                            "Create_or_UpdateId": {
+                                                "inputs": {
+                                                    "body": {
+                                                        "Address": "@{items('For_each_Id')?['fields']?['Address']?['text']}",
+                                                        "CountryRegion": "@{items('For_each_Id')?['fields']?['CountryRegion']?['valueCountryRegion']}",
+                                                        "DateOfBirth": "@{items('For_each_Id')?['fields']?['DateOfBirth']?['text']}",
+                                                        "DateOfExpiration": "@{items('For_each_Id')?['fields']?['DateOfExpiration']?['text']}",
+                                                        "DocumentNumber": "@{items('For_each_Id')?['fields']?['DocumentNumber']?['text']}",
+                                                        "DocumentType": "@{items('For_each_Id')?['fields']?['DocumentType']?['text']}",
+                                                        "FileName": "@{triggerBody()?['Name']}",
+                                                        "FirstName": "@{items('For_each_Id')?['fields']?['FirstName']?['text']}",
+                                                        "LastName": "@{items('For_each_Id')?['fields']?['LastName']?['text']}",
+                                                        "MachineReadableZone": "@{items('For_each_Id')?['fields']?['MachineReadableZone']?['text']}",
+                                                        "Nationality": "@{items('For_each_Id')?['fields']?['Nationality']?['valueCountryRegion']}",
+                                                        "Region": "@{items('For_each_Id')?['fields']?['Region']?['text']}",
+                                                        "Sex": "@{items('For_each_Id')?['fields']?['Sex']?['text']}",
+                                                        "claimId": "@{variables('claimId')}",
+                                                        "formtype": "Driving License",
+                                                        "id": "@{guid()}"
+                                                    },
+                                                    "host": {
+                                                        "connection": {
+                                                            "name": "@parameters('$connections')['documentdb']['connectionId']"
+                                                        }
+                                                    },
+                                                    "method": "post",
+                                                    "path": "/v3/dbs/@{encodeURIComponent('fsihack')}/colls/@{encodeURIComponent('claims')}/docs"
+                                                },
+                                                "runAfter": {},
+                                                "type": "ApiConnection"
+                                            }
+                                        },
+                                        "foreach": "@body('Analyze_Driving_License')?['analyzeResult']?['documentResults']",
+                                        "runAfter": {
+                                            "Analyze_Driving_License": [
+                                                "Succeeded"
+                                            ]
+                                        },
+                                        "type": "Foreach"
+                                    }
+                                },
+                                "case": "driving license"
+                            },
+                            "Insurance": {
+                                "actions": {
+                                    "Analyze_Insurance": {
+                                        "inputs": {
+                                            "headers": {
+                                                "inputFileUrl": "@body('Create_SAS_URI_by_path')?['WebUrl']"
+                                            },
+                                            "host": {
+                                                "connection": {
+                                                    "name": "@parameters('$connections')['formrecognizer']['connectionId']"
+                                                }
+                                            },
+                                            "method": "post",
+                                            "path": "/documentModels/@{encodeURIComponent('Insurance')}:analyze",
+                                            "queries": {
+                                                "api-version": "2022-08-31"
+                                            }
+                                        },
+                                        "runAfter": {},
+                                        "type": "ApiConnection"
+                                    },
+                                    "For_each_insurance": {
+                                        "actions": {
+                                            "Create_or_Update_Insurance": {
+                                                "inputs": {
+                                                    "body": {
+                                                        "Agency": "",
+                                                        "Agency Address": "@{items('For_each_insurance')?['fields']?['Agency Address']}",
+                                                        "Company": "",
+                                                        "Effective Date": "@{items('For_each_insurance')?['fields']?['Effective Date']}",
+                                                        "Expiration Date": "@{items('For_each_insurance')?['fields']?['Expiration Date']}",
+                                                        "FileName": "@{triggerBody()?['Name']}",
+                                                        "Insured": "",
+                                                        "Insured Address": "@{items('For_each_insurance')?['fields']?['Insured Address']}",
+                                                        "Make": "",
+                                                        "Model": "",
+                                                        "PolicyNumber": "@{items('For_each_insurance')?['fields']?['Policy Number']}",
+                                                        "State": "@{items('For_each_insurance')?['fields']?['State']}",
+                                                        "VIN": "@{items('For_each_insurance')?['fields']?['VIN']}",
+                                                        "Year": "",
+                                                        "claimId": "@{variables('claimId')}",
+                                                        "formtype": "Insurance",
+                                                        "id": "@{guid()}"
+                                                    },
+                                                    "host": {
+                                                        "connection": {
+                                                            "name": "@parameters('$connections')['documentdb']['connectionId']"
+                                                        }
+                                                    },
+                                                    "method": "post",
+                                                    "path": "/v3/dbs/@{encodeURIComponent('fsihack')}/colls/@{encodeURIComponent('claims')}/docs"
+                                                },
+                                                "runAfter": {},
+                                                "type": "ApiConnection"
+                                            }
+                                        },
+                                        "foreach": "@body('Parse_Insurance_Response')",
+                                        "runAfter": {
+                                            "Parse_Insurance_Response": [
+                                                "Succeeded"
+                                            ]
+                                        },
+                                        "type": "Foreach"
+                                    },
+                                    "Parse_Insurance_Response": {
+                                        "inputs": {
+                                            "content": "@body('Analyze_Insurance')?['analyzeResult']?['documents']",
+                                            "schema": {
+                                                "items": {
+                                                    "properties": {
+                                                        "_fields": {
+                                                            "items": {
+                                                                "properties": {
+                                                                    "fieldName": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "fieldValue": {
+                                                                        "properties": {
+                                                                            "boundingRegions": {
+                                                                                "items": {
+                                                                                    "properties": {
+                                                                                        "pageNumber": {
+                                                                                            "type": "integer"
+                                                                                        },
+                                                                                        "polygon": {
+                                                                                            "items": {
+                                                                                                "type": "integer"
+                                                                                            },
+                                                                                            "type": "array"
+                                                                                        }
+                                                                                    },
+                                                                                    "required": [
+                                                                                        "pageNumber",
+                                                                                        "polygon"
+                                                                                    ],
+                                                                                    "type": "object"
+                                                                                },
+                                                                                "type": "array"
+                                                                            },
+                                                                            "confidence": {
+                                                                                "type": "number"
+                                                                            },
+                                                                            "content": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "spans": {
+                                                                                "items": {
+                                                                                    "properties": {
+                                                                                        "length": {
+                                                                                            "type": "integer"
+                                                                                        },
+                                                                                        "offset": {
+                                                                                            "type": "integer"
+                                                                                        }
+                                                                                    },
+                                                                                    "required": [
+                                                                                        "offset",
+                                                                                        "length"
+                                                                                    ],
+                                                                                    "type": "object"
+                                                                                },
+                                                                                "type": "array"
+                                                                            },
+                                                                            "type": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "valueString": {
+                                                                                "type": "string"
+                                                                            }
+                                                                        },
+                                                                        "type": "object"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "fieldName",
+                                                                    "fieldValue"
+                                                                ],
+                                                                "type": "object"
+                                                            },
+                                                            "type": "array"
+                                                        },
+                                                        "boundingRegions": {
+                                                            "items": {
+                                                                "properties": {
+                                                                    "pageNumber": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "polygon": {
+                                                                        "items": {
+                                                                            "type": "integer"
+                                                                        },
+                                                                        "type": "array"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "pageNumber",
+                                                                    "polygon"
+                                                                ],
+                                                                "type": "object"
+                                                            },
+                                                            "type": "array"
+                                                        },
+                                                        "confidence": {
+                                                            "type": "number"
+                                                        },
+                                                        "docType": {
+                                                            "type": "string"
+                                                        },
+                                                        "fields": {
+                                                            "properties": {
+                                                                "Agency Address": {
+                                                                    "properties": {
+                                                                        "confidence": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "type": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                "Effective Date": {
+                                                                    "properties": {
+                                                                        "boundingRegions": {
+                                                                            "items": {
+                                                                                "properties": {
+                                                                                    "pageNumber": {
+                                                                                        "type": "integer"
+                                                                                    },
+                                                                                    "polygon": {
+                                                                                        "items": {
+                                                                                            "type": "integer"
+                                                                                        },
+                                                                                        "type": "array"
+                                                                                    }
+                                                                                },
+                                                                                "required": [
+                                                                                    "pageNumber",
+                                                                                    "polygon"
+                                                                                ],
+                                                                                "type": "object"
+                                                                            },
+                                                                            "type": "array"
+                                                                        },
+                                                                        "confidence": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "content": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "spans": {
+                                                                            "items": {
+                                                                                "properties": {
+                                                                                    "length": {
+                                                                                        "type": "integer"
+                                                                                    },
+                                                                                    "offset": {
+                                                                                        "type": "integer"
+                                                                                    }
+                                                                                },
+                                                                                "required": [
+                                                                                    "offset",
+                                                                                    "length"
+                                                                                ],
+                                                                                "type": "object"
+                                                                            },
+                                                                            "type": "array"
+                                                                        },
+                                                                        "type": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "valueString": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                "Expiration Date": {
+                                                                    "properties": {
+                                                                        "boundingRegions": {
+                                                                            "items": {
+                                                                                "properties": {
+                                                                                    "pageNumber": {
+                                                                                        "type": "integer"
+                                                                                    },
+                                                                                    "polygon": {
+                                                                                        "items": {
+                                                                                            "type": "integer"
+                                                                                        },
+                                                                                        "type": "array"
+                                                                                    }
+                                                                                },
+                                                                                "required": [
+                                                                                    "pageNumber",
+                                                                                    "polygon"
+                                                                                ],
+                                                                                "type": "object"
+                                                                            },
+                                                                            "type": "array"
+                                                                        },
+                                                                        "confidence": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "content": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "spans": {
+                                                                            "items": {
+                                                                                "properties": {
+                                                                                    "length": {
+                                                                                        "type": "integer"
+                                                                                    },
+                                                                                    "offset": {
+                                                                                        "type": "integer"
+                                                                                    }
+                                                                                },
+                                                                                "required": [
+                                                                                    "offset",
+                                                                                    "length"
+                                                                                ],
+                                                                                "type": "object"
+                                                                            },
+                                                                            "type": "array"
+                                                                        },
+                                                                        "type": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "valueString": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                "Insured Address": {
+                                                                    "properties": {
+                                                                        "boundingRegions": {
+                                                                            "items": {
+                                                                                "properties": {
+                                                                                    "pageNumber": {
+                                                                                        "type": "integer"
+                                                                                    },
+                                                                                    "polygon": {
+                                                                                        "items": {
+                                                                                            "type": "integer"
+                                                                                        },
+                                                                                        "type": "array"
+                                                                                    }
+                                                                                },
+                                                                                "required": [
+                                                                                    "pageNumber",
+                                                                                    "polygon"
+                                                                                ],
+                                                                                "type": "object"
+                                                                            },
+                                                                            "type": "array"
+                                                                        },
+                                                                        "confidence": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "content": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "spans": {
+                                                                            "items": {
+                                                                                "properties": {
+                                                                                    "length": {
+                                                                                        "type": "integer"
+                                                                                    },
+                                                                                    "offset": {
+                                                                                        "type": "integer"
+                                                                                    }
+                                                                                },
+                                                                                "required": [
+                                                                                    "offset",
+                                                                                    "length"
+                                                                                ],
+                                                                                "type": "object"
+                                                                            },
+                                                                            "type": "array"
+                                                                        },
+                                                                        "type": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "valueString": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                "Policy Number": {
+                                                                    "properties": {
+                                                                        "boundingRegions": {
+                                                                            "items": {
+                                                                                "properties": {
+                                                                                    "pageNumber": {
+                                                                                        "type": "integer"
+                                                                                    },
+                                                                                    "polygon": {
+                                                                                        "items": {
+                                                                                            "type": "integer"
+                                                                                        },
+                                                                                        "type": "array"
+                                                                                    }
+                                                                                },
+                                                                                "required": [
+                                                                                    "pageNumber",
+                                                                                    "polygon"
+                                                                                ],
+                                                                                "type": "object"
+                                                                            },
+                                                                            "type": "array"
+                                                                        },
+                                                                        "confidence": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "content": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "spans": {
+                                                                            "items": {
+                                                                                "properties": {
+                                                                                    "length": {
+                                                                                        "type": "integer"
+                                                                                    },
+                                                                                    "offset": {
+                                                                                        "type": "integer"
+                                                                                    }
+                                                                                },
+                                                                                "required": [
+                                                                                    "offset",
+                                                                                    "length"
+                                                                                ],
+                                                                                "type": "object"
+                                                                            },
+                                                                            "type": "array"
+                                                                        },
+                                                                        "type": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "valueString": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                "State": {
+                                                                    "properties": {
+                                                                        "confidence": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "type": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                "VIN": {
+                                                                    "properties": {
+                                                                        "boundingRegions": {
+                                                                            "items": {
+                                                                                "properties": {
+                                                                                    "pageNumber": {
+                                                                                        "type": "integer"
+                                                                                    },
+                                                                                    "polygon": {
+                                                                                        "items": {
+                                                                                            "type": "integer"
+                                                                                        },
+                                                                                        "type": "array"
+                                                                                    }
+                                                                                },
+                                                                                "required": [
+                                                                                    "pageNumber",
+                                                                                    "polygon"
+                                                                                ],
+                                                                                "type": "object"
+                                                                            },
+                                                                            "type": "array"
+                                                                        },
+                                                                        "confidence": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "content": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "spans": {
+                                                                            "items": {
+                                                                                "properties": {
+                                                                                    "length": {
+                                                                                        "type": "integer"
+                                                                                    },
+                                                                                    "offset": {
+                                                                                        "type": "integer"
+                                                                                    }
+                                                                                },
+                                                                                "required": [
+                                                                                    "offset",
+                                                                                    "length"
+                                                                                ],
+                                                                                "type": "object"
+                                                                            },
+                                                                            "type": "array"
+                                                                        },
+                                                                        "type": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "valueString": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "spans": {
+                                                            "items": {
+                                                                "properties": {
+                                                                    "length": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "offset": {
+                                                                        "type": "integer"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "offset",
+                                                                    "length"
+                                                                ],
+                                                                "type": "object"
+                                                            },
+                                                            "type": "array"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "docType",
+                                                        "boundingRegions",
+                                                        "fields",
+                                                        "confidence",
+                                                        "spans",
+                                                        "_fields"
+                                                    ],
+                                                    "type": "object"
+                                                },
+                                                "type": "array"
+                                            }
+                                        },
+                                        "runAfter": {
+                                            "Analyze_Insurance": [
+                                                "Succeeded"
+                                            ]
+                                        },
+                                        "type": "ParseJson"
+                                    }
+                                },
+                                "case": "insurance"
+                            },
+                            "Service_Estimate": {
+                                "actions": {
+                                    "Analyze_Service_Estimate": {
+                                        "inputs": {
+                                            "headers": {
+                                                "inputFileUrl": "@body('Create_SAS_URI_by_path')?['WebUrl']"
+                                            },
+                                            "host": {
+                                                "connection": {
+                                                    "name": "@parameters('$connections')['formrecognizer']['connectionId']"
+                                                }
+                                            },
+                                            "method": "post",
+                                            "path": "/v2.1/prebuilt/invoice/analyze",
+                                            "queries": {
+                                                "includeTextDetails": true
+                                            }
+                                        },
+                                        "runAfter": {},
+                                        "type": "ApiConnection"
+                                    },
+                                    "For_each_Invoice": {
+                                        "actions": {
+                                            "Create_or_Update_Invoice": {
+                                                "inputs": {
+                                                    "body": {
+                                                        "AmountDue": "@{items('For_each_Invoice')?['fields']?['AmountDue']}",
+                                                        "BillingAddress": "@{items('For_each_Invoice')?['fields']?['BillingAddress']?['text']}",
+                                                        "BillingAddressRecipient": "@{items('For_each_Invoice')?['fields']?['BillingAddressRecipient']?['text']}",
+                                                        "CustomerAddress": "@{items('For_each_Invoice')?['fields']?['CustomerAddress']?['text']}",
+                                                        "CustomerAddressRecipient": "@{items('For_each_Invoice')?['fields']?['CustomerAddressRecipient']?['text']}",
+                                                        "CustomerId": "@{items('For_each_Invoice')?['fields']?['CustomerId']?['text']}",
+                                                        "CustomerName": "@{items('For_each_Invoice')?['fields']?['CustomerName']?['text']}",
+                                                        "DueDate": "@{items('For_each_Invoice')?['fields']?['DueDate']?['text']}",
+                                                        "FileName": "@{triggerBody()?['Name']}",
+                                                        "InvoiceDate": "@{items('For_each_Invoice')?['fields']?['InvoiceDate']?['text']}",
+                                                        "InvoiceId": "@{items('For_each_Invoice')?['fields']?['InvoiceId']?['text']}",
+                                                        "InvoiceTotal": "@{items('For_each_Invoice')?['fields']?['InvoiceTotal']?['text']}",
+                                                        "PreviousUnpaidBalance": "@{items('For_each_Invoice')?['fields']?['PreviousUnpaidBalance']?['text']}",
+                                                        "PurchaseOrder": "@{items('For_each_Invoice')?['fields']?['PurchaseOrder']?['text']}",
+                                                        "RemittanceAddress": "@{items('For_each_Invoice')?['fields']?['RemittanceAddress']?['text']}",
+                                                        "RemittanceAddressRecipient": "@{items('For_each_Invoice')?['fields']?['RemittanceAddressRecipient']?['text']}",
+                                                        "ServiceAddress": "@{items('For_each_Invoice')?['fields']?['ServiceAddress']?['text']}",
+                                                        "ServiceAddressRecipient": "@{items('For_each_Invoice')?['fields']?['ServiceAddressRecipient']?['text']}",
+                                                        "ServiceEndDate": "@{items('For_each_Invoice')?['fields']?['ServiceEndDate']?['text']}",
+                                                        "ServiceStartDate": "@{items('For_each_Invoice')?['fields']?['ServiceStartDate']?['text']}",
+                                                        "ShippingAddress": "@{items('For_each_Invoice')?['fields']?['ShippingAddress']?['text']}",
+                                                        "ShippingAddressRecipient": "@{items('For_each_Invoice')?['fields']?['ShippingAddressRecipient']?['text']}",
+                                                        "SubTotal": "@{items('For_each_Invoice')?['fields']?['SubTotal']?['text']}",
+                                                        "TotalTax": "@{items('For_each_Invoice')?['fields']?['TotalTax']?['text']}",
+                                                        "VendorAddress": "@{items('For_each_Invoice')?['fields']?['VendorAddress']?['text']}",
+                                                        "VendorAddressRecipient": "@{items('For_each_Invoice')?['fields']?['VendorAddressRecipient']?['text']}",
+                                                        "VendorName": "@{items('For_each_Invoice')?['fields']?['VendorName']?['text']}",
+                                                        "claimId": "@{variables('claimId')}",
+                                                        "formtype": "Service Estimate",
+                                                        "id": "@{guid()}"
+                                                    },
+                                                    "host": {
+                                                        "connection": {
+                                                            "name": "@parameters('$connections')['documentdb']['connectionId']"
+                                                        }
+                                                    },
+                                                    "method": "post",
+                                                    "path": "/v3/dbs/@{encodeURIComponent('fsihack')}/colls/@{encodeURIComponent('claims')}/docs"
+                                                },
+                                                "runAfter": {},
+                                                "type": "ApiConnection"
+                                            }
+                                        },
+                                        "foreach": "@body('Analyze_Service_Estimate')?['analyzeResult']?['documentResults']",
+                                        "runAfter": {
+                                            "Analyze_Service_Estimate": [
+                                                "Succeeded"
+                                            ]
+                                        },
+                                        "type": "Foreach"
+                                    }
+                                },
+                                "case": "service estimates"
+                            }
+                        },
+                        "default": {
+                            "actions": {}
+                        },
+                        "expression": "@items('For_each_tags')?['tagName']",
+                        "runAfter": {},
+                        "type": "Switch"
+                    }
+                },
+                "foreach": "@body('Filter_Probability')",
+                "runAfter": {
+                    "Filter_Probability": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Foreach"
+            },
+            "Image_Classification": {
+                "inputs": {
+                    "body": {
+                        "Url": "@body('Create_SAS_URI_by_path')?['WebUrl']"
+                    },
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['cognitiveservicescustomvision']['connectionId']"
+                        }
+                    },
+                    "method": "post",
+                    "path": "/v2/customvision/v3.0/Prediction/@{encodeURIComponent('a0a0dc0e-ecc2-4adc-a57a-6a23228e1a2f')}/classify/iterations/@{encodeURIComponent('latest')}/url"
+                },
+                "runAfter": {
+                    "Create_SAS_URI_by_path": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection"
+            },
+            "Initialize_variable": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "claimId",
+                            "type": "string",
+                            "value": "@{substring(triggerBody()?['DisplayName'],0,indexOf(triggerBody()?['DisplayName'], '_'))}"
+                        }
+                    ]
+                },
+                "runAfter": {},
+                "type": "InitializeVariable"
+            },
+            "Parse_Json_Response": {
+                "inputs": {
+                    "content": "@body('Image_Classification')?['predictions']",
+                    "schema": {
+                        "items": {
+                            "properties": {
+                                "probability": {
+                                    "type": "number"
+                                },
+                                "tagId": {
+                                    "type": "string"
+                                },
+                                "tagName": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "probability",
+                                "tagId",
+                                "tagName"
+                            ],
+                            "type": "object"
+                        },
+                        "type": "array"
+                    }
+                },
+                "runAfter": {
+                    "Image_Classification": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ParseJson"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "defaultValue": {},
+                "type": "Object"
+            }
+        },
+        "triggers": {
+            "When_document_uploaded": {
+                "evaluatedRecurrence": {
+                    "frequency": "Second",
+                    "interval": 5
+                },
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azureblob']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/datasets/default/triggers/batch/onupdatedfile",
+                    "queries": {
+                        "folderId": "JTJmdXBsb2Fk",
+                        "maxFileCount": 1
+                    }
+                },
+                "metadata": {
+                    "JTJmdXBsb2Fk": "/upload",
+                    "JTJmemlwLWZpbGVz": "/zip-files"
+                },
+                "recurrence": {
+                    "frequency": "Second",
+                    "interval": 5
+                },
+                "splitOn": "@triggerBody()",
+                "type": "ApiConnection"
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "azureblob": {
+                    "connectionId": "/subscriptions/4dd277ee-0bad-4c5b-8ca9-f57b13d5f553/resourceGroups/aiclaims13/providers/Microsoft.Web/connections/aiclaims13blob",
+                    "connectionName": "aiclaims13blob",
+                    "id": "/subscriptions/4dd277ee-0bad-4c5b-8ca9-f57b13d5f553/providers/Microsoft.Web/locations/eastus/managedApis/azureblob"
+                },
+                "cognitiveservicescustomvision": {
+                    "connectionId": "/subscriptions/4dd277ee-0bad-4c5b-8ca9-f57b13d5f553/resourceGroups/aiclaims13/providers/Microsoft.Web/connections/aiclaims13cvpred",
+                    "connectionName": "aiclaims13cvpred",
+                    "id": "/subscriptions/4dd277ee-0bad-4c5b-8ca9-f57b13d5f553/providers/Microsoft.Web/locations/eastus/managedApis/cognitiveservicescustomvision"
+                },
+                "documentdb": {
+                    "connectionId": "/subscriptions/4dd277ee-0bad-4c5b-8ca9-f57b13d5f553/resourceGroups/aiclaims13/providers/Microsoft.Web/connections/aiclaims13cdb",
+                    "connectionName": "aiclaims13cdb",
+                    "id": "/subscriptions/4dd277ee-0bad-4c5b-8ca9-f57b13d5f553/providers/Microsoft.Web/locations/eastus/managedApis/documentdb"
+                },
+                "formrecognizer": {
+                    "connectionId": "/subscriptions/4dd277ee-0bad-4c5b-8ca9-f57b13d5f553/resourceGroups/aiclaims13/providers/Microsoft.Web/connections/aiclaims13fr",
+                    "connectionName": "aiclaims13fr",
+                    "id": "/subscriptions/4dd277ee-0bad-4c5b-8ca9-f57b13d5f553/providers/Microsoft.Web/locations/eastus/managedApis/formrecognizer"
+                }
+            }
+        }
+    }
+}
