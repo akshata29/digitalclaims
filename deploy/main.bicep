@@ -92,17 +92,17 @@ module customvision 'modules/customvision.bicep' = {
   }
 }
 
-module luis 'modules/luis.bicep' = {
-  name: 'lu${name}-deployment'
-  scope: resourceGroup('${name}')
-  params: {
-    location: location
-    luisPredictionName: '${name}luprcogsvc1'
-    luisTrainingName: '${name}lutcogsvc1'
-    sku: 'F0'
-    tags: tags
-  }
-}
+// module luis 'modules/luis.bicep' = {
+//   name: 'lu${name}-deployment'
+//   scope: resourceGroup('${name}')
+//   params: {
+//     location: location
+//     luisPredictionName: '${name}luprcogsvc1'
+//     luisTrainingName: '${name}lutcogsvc1'
+//     sku: 'F0'
+//     tags: tags
+//   }
+// }
 
 module language 'modules/language.bicep' = {
   name: 'lg${name}-deployment'
