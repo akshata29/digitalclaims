@@ -14,8 +14,6 @@ az storage blob upload-batch -d train --account-name $prefix"stor" --source Trai
 -- web connection are created automatically otherwise
 -- Possibly need to create cosmosdb web connection manually - webconnection ending with cdb
 az deployment sub create --location eastus --parameters '{ \"prefix\": { \"value\": \"astdc\" }, \"location\": { \"value\": \"eastus\" } }' --template-file cdbconn.bicep
--- Deploy Logic app (automated somehow doesn't work so create manually with serverless consumption - ending with lapp).  It is empty logicapp
-az deployment sub create --location eastus --parameters '{ \"prefix\": { \"value\": \"astdc\" }, \"location\": { \"value\": \"eastus\" } }' --template-file logicapps.bicep
 
 -- Copy/paste logic app content.  Replace the prefix to deployed prefix and replace subscription Id to deployed subscriptionId
 {

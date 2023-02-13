@@ -123,7 +123,7 @@ module appserviceplan 'modules/appserviceplan.bicep' = {
   params: {
     location: location
     appServicePlanName: '${name}asp'
-    sku: 'F1'
+    sku: 'B1'
   }
 }
 
@@ -153,8 +153,8 @@ module cosmosdb 'modules/cosmosdb.bicep' = {
     defaultConsistencyLevel: 'BoundedStaleness'
     maxIntervalInSeconds: 300
     maxStalenessPrefix: 100000
-    primaryRegion: 'westus'
-    secondaryRegion: 'eastus'
+    primaryRegion: location
+    secondaryRegion: 'westus'
   }
 }
 
@@ -169,31 +169,33 @@ module applicationInsights 'modules/applicationinsights.bicep' = {
   }
 }
 
-module trainblob 'modules/blobupload.bicep' = {
-  name: 'blobtrain-${name}-deployment'
-  //scope: resourceGroup('${name}')
-  scope: rG
-  dependsOn: [storage]
-  params: {
-    location: location
-    storageAccountName:'${name}stor'
-    containerName:'train'
-    folderName:'Train'
-  }
-}
+// Comment code below for now as blob upload is not working and we are doing it manually
 
-module testblob 'modules/blobupload.bicep' = {
-  name: 'blobtest-${name}-deployment'
-  //scope: resourceGroup('${name}')
-  scope: rG
-  dependsOn: [storage]
-  params: {
-    location: location
-    storageAccountName:'${name}stor'
-    containerName:'test'
-    folderName:'Test'
-  }
-}
+// module trainblob 'modules/blobupload.bicep' = {
+//   name: 'blobtrain-${name}-deployment'
+//   //scope: resourceGroup('${name}')
+//   scope: rG
+//   dependsOn: [storage]
+//   params: {
+//     location: location
+//     storageAccountName:'${name}stor'
+//     containerName:'train'
+//     folderName:'Train'
+//   }
+// }
+
+// module testblob 'modules/blobupload.bicep' = {
+//   name: 'blobtest-${name}-deployment'
+//   //scope: resourceGroup('${name}')
+//   scope: rG
+//   dependsOn: [storage]
+//   params: {
+//     location: location
+//     storageAccountName:'${name}stor'
+//     containerName:'test'
+//     folderName:'Test'
+//   }
+// }
 
 module blobconnection 'modules/storagewebconnection.bicep' = {
   name: 'storweb-${name}-deployment'
