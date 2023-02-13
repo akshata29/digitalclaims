@@ -245,19 +245,28 @@ module cdbconnection 'modules/cosmosdbwebconnection.bicep' = {
   }
 }
 
-module logicapp 'modules/logicapp.bicep' = {
+module logicapp 'modules/logicappempty.bicep' = {
   name: 'lappconn-${name}-deployment'
   scope: rG
-  dependsOn: [cdbconnection, frconnection, blobconnection, cvconnection]
   params: {
     location: location
-    blobConnName:'${name}blob'
-    cdbConnName:'${name}cdb'
-    cgcvConnName:'${name}cvpred'
-    frConnName:'${name}fr'
     logicAppName:'${name}lapp'
   }
 }
+
+// module logicapp 'modules/logicapp.bicep' = {
+//   name: 'lappconn-${name}-deployment'
+//   scope: rG
+//   dependsOn: [cdbconnection, frconnection, blobconnection, cvconnection]
+//   params: {
+//     location: location
+//     blobConnName:'${name}blob'
+//     cdbConnName:'${name}cdb'
+//     cgcvConnName:'${name}cvpred'
+//     frConnName:'${name}fr'
+//     logicAppName:'${name}lapp'
+//   }
+// }
 
 // // Get a reference to the existing storage
 // resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' existing = {
